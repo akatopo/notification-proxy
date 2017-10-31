@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>notification-proxy</title>
+    <script type="module">
+      import register from './static/register.js';
+      import lib from './static/lib.js';
+
+      const vapidPublicKey = '<%= vapidPublicKey %>';
+      const deviceId = '<%= deviceId %>';
+      const otp = '<%= otp %>';
+      const env = '<%= env %>';
+      const pushSupported = register.pushSupported();
+
+      (async function main() {
+        if (!pushSupported) {
+          return;
+        }
+
+        const swRegistration = await register.registerServiceWorker();
+        await register.askNotificationPermission();
+        const subscribedToPush = await register.subscribedToPush(swRegistration);
+        try {
+          let subscription;
+          if (!subscribedToPush) {
+            subscription = await register.subscribeUserToPush(vapidPublicKey, swRegistration);
+          }
+          else {
+            subscription = await swRegistration.pushManager.getSubscription();
+          }
+          const res = await lib.akatopo['notification-proxy'][`@${env}`].save_subscription({
+            deviceId,
+            otp,
+            subscription
+          });
+        }
+        catch (err) {
+          console.error(err);
+        }
+      }());
+    </script>
+</head>
+<body>
+  <pre>
+    deviceId: <%= deviceId %>
+    otp: <%= otp %>
+    vapidPublicKey: <%= vapidPublicKey %>
+    env: <%= env %>
+  </pre>
+</body>
+</html>

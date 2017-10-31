@@ -1,0 +1,10 @@
+#!/usr/bin/env node
+
+const program = require('commander');
+
+program
+  .version('0.3.0')
+  .command('push <jsonString>', 'push notification to subscribers')
+  .command('otp', 'generate registration link')
+  .command('close-job <jobId>', 'close job and get any action set')
+  .parse(process.argv);
