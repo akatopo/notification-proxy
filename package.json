@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "description": "",
   "author": "Alex Katopodis <akatopo@users.noreply.github.com>",
+  "license": "MIT",
   "main": "functions/__main__.js",
   "dependencies": {
     "bluebird": "^3.5.1",
