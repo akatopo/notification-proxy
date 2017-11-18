@@ -6,6 +6,9 @@ const path = require('path');
 
 const filepath = './static';
 let staticFiles = fileio.readFiles(filepath);
+const maxAgeOverrides = {
+  'service-worker.js': 'max-age=0',
+};
 
 /**
  * This endpoint handles all routes to `/static` over HTTP, and maps them to the
@@ -23,9 +26,9 @@ module.exports = (context, callback) => {
   let buffer;
   const headers = {};
 
-  headers['Cache-Control'] = context.service.environment === 'release' ?
-    'max-age=31536000' :
-    'max-age=0';
+  headers['Cache-Control'] = staticFilepath in maxAgeOverrides ?
+    maxAgeOverrides[staticFilepath] :
+    getDefaultMaxAge(context.service.environment);
 
   if (!staticFiles[staticFilepath]) {
     headers['Content-Type'] = 'text/plain';
@@ -39,3 +42,9 @@ module.exports = (context, callback) => {
   return callback(null, buffer, headers);
 
 };
+
+function getDefaultMaxAge(env) {
+  return env === 'release' ?
+    'max-age=31536000' :
+    'max-age=0';
+}
