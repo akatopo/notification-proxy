@@ -9,17 +9,34 @@ self.addEventListener('push', (event) => {
   catch (_) {
     payloadObject = { data: { title: event.data.text() } };
   }
-  const title = get('data.title', payloadObject);
 
-  event.waitUntil(self.registration.showNotification(title, payloadObject));
+  const expiresAtMillis = Date.parse(get('data.expiresAt', payloadObject));
+  let timeout;
+  if (!Number.isNaN(expiresAtMillis)) {
+    timeout = expiresAtMillis - Date.now();
+    if (timeout <= 0) {
+      return;
+    }
+  }
+
+  const title = get('data.title', payloadObject);
+  const notified = showNotification(title, payloadObject)
+    .then((notification) => {
+      if (timeout !== undefined) {
+        setTimeout(notification.close.bind(notification), timeout);
+      }
+    });
+
+  // maybe wait until timeout executed / canceled
+  event.waitUntil(notified);
 });
 
 self.addEventListener('notificationclick', (event) => {
-  event.notification.close();
   const { action } = event;
   if (!action) {
     return;
   }
+  event.notification.close();
   const { env, jobId } = get('notification.data', event) || {};
   const baseUrl = getBaseUrl(env);
   const url = `${baseUrl}/?jobId=${jobId}&action=${action}`;
@@ -29,6 +46,12 @@ self.addEventListener('notificationclick', (event) => {
     .catch(console.error);
   event.waitUntil(addedActionToJob);
 });
+
+function showNotification(title, options) {
+  return self.registration.showNotification(title, options)
+    .then(() => self.registration.getNotifications({ tag: options.tag })
+      .then((notifications) => notifications[notifications.length - 1]));
+}
 
 function get(path, object) {
   return path

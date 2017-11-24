@@ -24,10 +24,14 @@ webpush.setVapidDetails(
 * Pushes a notification to a device's subscribers. The notification payload needs to be signed.
 * The notification payload has to be parsable as the options object expected by
 * `ServiceWorkerRegistration.showNotification(title, [options])`. Additionally the `data` property
-* must be an object with the `title` as an optional field. The job id (`jobId`) and the
-* environment (`env`) are going to be added to `data` once the notification
-* is pushed to the subscribers. Further, the job id will be added only if the `actions` property
-* is a populated array and the resulting job will be available for an hour or until it's closed.
+* must be an object with `title` and `expiresAt` as optional fields.
+* `ExpiresAt` should be an RFC2822(https://tools.ietf.org/html/rfc2822#section-3.3) date string.
+* The notification will close once the time between the showing of the notification
+* and `expiresAt` passes, or won't show up at all if `expiresAt` is in the past.
+* A job id (`jobId`) and the environment (`env`) are going to be added to `data` once the
+* notification is pushed to subscribers.
+* Further, the job id will be added only if the `actions` property is a populated array
+* and the resulting job will be available for an hour or until it's closed.
 * @param {string} deviceId device id
 * @param {string} payload notification payload (JSON string) compatible with a
 *   ServiceWorkerRegistration.showNotification() options object
